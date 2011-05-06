@@ -1,17 +1,45 @@
 #!/bin/bash
 
-# git-findbranch v0.1
+# git-findbranch v0.2
 # Daniel Diaz <yosoy@danieldiaz.org>
 
-configbranches=$(git config --local -l | grep ^branch.*\.merge\=.* | tr '\n' ' ')
-head=$(git log -1 --oneline --format="%H")
+# Are we talking git?
+git config --local --get core.repositoryformatversion >/dev/null 2>&1; gitret=$?
+
+if [ ! ${gitret} -eq 0 ]; then
+	echo "Not in a GIT repository?" >&2
+	exit 1
+fi
+
+committish="HEAD"; [ $# -gt 0 ] && committish="${1}"
+configbranches=$(git config --local -l 2>/dev/null | grep ^branch.*\.merge\=.* | tr '\n' ' ')
+head=$(git log -1 --oneline --format="%H" ${committish} 2>/dev/null)
 minhops=
 candidates=
+
+if [ -z "${head}" ]; then
+	echo "Could not find reference for ${committish}" >&2
+	exit 1
+fi
+
+if [ -z "${configbranches}" ]; then
+	# No branches found.
+
+	hops=$(git log --oneline master..${head} >/dev/null 2>&1); ret=$?
+
+	if [ $ret -eq 0 ]; then
+		echo "master"
+		exit 0
+	else
+		echo "No branches found. I'd go with master." >&2
+		exit 1
+	fi
+fi
 
 for i in ${configbranches}; do
 	branchpre=${i%%\.merge\=*}
 	branch=${branchpre#branch\.*}
-	hops=$(git log --oneline ${branch}..${head} | wc -l)
+	hops=$(git log --oneline ${branch}..${head} 2>/dev/null | wc -l)
 
 	if [ -z ${minhops} ]; then
 		minhops=${hops}
