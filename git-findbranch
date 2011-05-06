@@ -12,7 +12,7 @@ if [ ! ${gitret} -eq 0 ]; then
 fi
 
 committish="HEAD"; [ $# -gt 0 ] && committish="${1}"
-configbranches=$(git config --local -l 2>/dev/null | grep ^branch.*\.merge\=.* | tr '\n' ' ')
+configbranches=$(git branch -av | grep -v HEAD | cut -c3- | cut -d" " -f1 | tr '\n' ' ')
 head=$(git log -1 --oneline --format="%H" ${committish} 2>/dev/null)
 minhops=
 candidates=
