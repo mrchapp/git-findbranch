@@ -4,7 +4,7 @@
 # Daniel Diaz <yosoy@danieldiaz.org>
 
 # Are we talking git?
-git config --local --get core.repositoryformatversion >/dev/null 2>&1; gitret=$?
+git config --get core.repositoryformatversion >/dev/null 2>&1; gitret=$?
 
 if [ ! ${gitret} -eq 0 ]; then
 	echo "Not in a GIT repository?" >&2
