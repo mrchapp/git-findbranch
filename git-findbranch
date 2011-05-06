@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# git-findbranch v0.1
+# Daniel Diaz <yosoy@danieldiaz.org>
+
+configbranches=$(git config --local -l | grep ^branch.*\.merge\=.* | tr '\n' ' ')
+head=$(git log -1 --oneline --format="%H")
+minhops=
+candidates=
+
+for i in ${configbranches}; do
+	branchpre=${i%%\.merge\=*}
+	branch=${branchpre#branch\.*}
+	hops=$(git log --oneline ${branch}..${head} | wc -l)
+
+	if [ -z ${minhops} ]; then
+		minhops=${hops}
+		candidates="${branch}"
+	elif [ ${hops} -eq ${minhops} ]; then
+		candidates="${candidates} ${branch}"
+	elif [ ${hops} -lt ${minhops} ]; then
+		minhops=${hops}
+		candidates="${branch}"
+	fi
+done
+
+echo "${candidates}"
